@@ -45,8 +45,8 @@ const Extension = ({ runServerless, context }) => {
   return (
     <Box>
       <Text>
-        Click the button below to duplicate this deal, including some properties,
-        company associations, and contact associations.
+        Click the button below to duplicate this deal, including all properties,
+        company associations, contact associations, and line items.
       </Text>
       <Box marginTop="md">
         <Button
@@ -71,7 +71,7 @@ const Extension = ({ runServerless, context }) => {
           variant="success"
           marginTop="md"
         >
-          Deal duplicated successfully!
+          Deal duplicated successfully with all properties and associations!
         </Alert>
       )}
     </Box>

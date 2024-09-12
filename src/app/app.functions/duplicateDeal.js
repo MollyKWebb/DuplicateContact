@@ -8,11 +8,14 @@ exports.main = async (context = {}, sendResponse) => {
     // Fetch deal data using GraphQL
     const dealData = await fetchDealData(hubspotClient, dealId);
     
-    // Create a new deal with the fetched data
+    // Create a new deal with all fetched properties
     const newDeal = await createDuplicateDeal(hubspotClient, dealData);
     
     // Associate the new deal with companies and contacts
     await associateDeal(hubspotClient, newDeal.id, dealData);
+
+    // Duplicate line items
+    await duplicateLineItems(hubspotClient, dealId, newDeal.id);
 
     sendResponse({
       status: 'SUCCESS',
@@ -30,12 +33,7 @@ async function fetchDealData(hubspotClient, dealId) {
   const query = `
     query DealQuery($dealId: String!) {
       deal(id: $dealId) {
-        amount
-        closedate
-        dealname
-        dealstage
-        pipeline
-        hubspot_owner_id
+        properties
         associations {
           companies {
             items {
@@ -64,12 +62,8 @@ async function fetchDealData(hubspotClient, dealId) {
 
 async function createDuplicateDeal(hubspotClient, dealData) {
   const properties = {
-    amount: dealData.amount,
-    closedate: dealData.closedate,
-    dealname: `${dealData.dealname} (Copy)`,
-    dealstage: dealData.dealstage,
-    pipeline: dealData.pipeline,
-    hubspot_owner_id: dealData.hubspot_owner_id,
+    ...dealData.properties,
+    dealname: `${dealData.properties.dealname} (Copy)`,
   };
 
   const apiResponse = await hubspotClient.crm.deals.basicApi.create({ properties });
@@ -86,5 +80,18 @@ async function associateDeal(hubspotClient, newDealId, dealData) {
 
   if (contactIds.length > 0) {
     await hubspotClient.crm.deals.associationsApi.createBatch(newDealId, 'contact', contactIds);
+  }
+}
+
+async function duplicateLineItems(hubspotClient, originalDealId, newDealId) {
+  const lineItems = await hubspotClient.crm.deals.associationsApi.getAll(originalDealId, 'line_item');
+  
+  for (const lineItem of lineItems.results) {
+    const originalLineItem = await hubspotClient.crm.lineItems.basicApi.getById(lineItem.id);
+    const newLineItemProperties = { ...originalLineItem.properties };
+    delete newLineItemProperties.hs_object_id;
+
+    const newLineItem = await hubspotClient.crm.lineItems.basicApi.create({ properties: newLineItemProperties });
+    await hubspotClient.crm.deals.associationsApi.create(newDealId, 'line_item', newLineItem.id);
   }
 }

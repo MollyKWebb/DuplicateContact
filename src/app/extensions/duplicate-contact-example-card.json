@@ -1,8 +1,8 @@
 {
   "type": "crm-card",
   "data": {
-    "title": "Duplicate a contact example card",
-    "uid": "duplicate_contact_example_card",
+    "title": "Duplicate a Deal Example Card",
+    "uid": "duplicate_deal_example_card",
     "location": "crm.record.tab",
     "module": {
       "file": "Extension.tsx"

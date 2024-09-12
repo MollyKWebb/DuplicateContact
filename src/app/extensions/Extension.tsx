@@ -34,7 +34,7 @@ const Extension = ({ runServerless, context }) => {
       if (response.status === 'SUCCESS') {
         setSuccess(true);
       } else {
-        throw new Error(response.message || 'Failed to duplicate contact');
+        throw new Error(response.message || 'Failed to duplicate deal');
       }
     } catch (err) {
       setError(err.message);
@@ -46,7 +46,7 @@ const Extension = ({ runServerless, context }) => {
   return (
     <Box>
       <Text>
-        Click the button below to duplicate this contact, including some properties,
+        Click the button below to duplicate this deal, including some properties,
         company associations, and deal associations.
       </Text>
       <Box marginTop="md">
@@ -72,7 +72,7 @@ const Extension = ({ runServerless, context }) => {
           variant="success"
           marginTop="md"
         >
-          <Text>Contact duplicated successfully!</Text>
+          <Text>Deal duplicated successfully!</Text>
         </Alert>
       )}
     </Box>

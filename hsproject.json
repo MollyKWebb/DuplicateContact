@@ -1,5 +1,24 @@
 {
-  "name": "duplicate-contact",
+  "name": "duplicate-deal",
   "srcDir": "src",
   "platformVersion": "2023.2"
+  "projectCli": {
+    "devCommand": "npm run dev",
+    "buildCommand": "npm run build"
+  },
+  "extensions": {
+    "duplicateDeal": {
+      "app": {
+        "file": "extensions/DuplicateDeal.jsx",
+        "title": "Duplicate Deal",
+        "location": "deal"
+      },
+      "serverlessFunctions": {
+        "duplicateDeal": {
+          "file": "app.functions/duplicateDeal.js",
+          "secrets": ["PRIVATE_APP_ACCESS_TOKEN"]
+        }
+      }
+    }
+  }
 }

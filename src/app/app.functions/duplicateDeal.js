@@ -2,7 +2,7 @@ const hubspot = require('@hubspot/api-client');
 
 exports.main = async (context = {}, sendResponse) => {
   const { dealId } = context.parameters;
-  const hubspotClient = new hubspot.Client({ accessToken: context.secrets.PRIVATE_APP_ACCESS_TOKEN });
+  const hubspotClient = new hubspot.Client({ accessToken: context.secrets.privateappkey });
 
   try {
     // Fetch deal data using GraphQL

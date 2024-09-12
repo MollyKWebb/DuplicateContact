@@ -5,7 +5,12 @@
   "scopes": [
     "crm.objects.contacts.read",
     "crm.objects.deals.read",
+    "crm.objects.deals.write",
     "crm.objects.companies.read",
+    "crm.objects.companies.write",
+    "crm.objects.companies.write",
+    "crm.objects.line_items.read",
+    "crm.objects.line_items.write",
     "collector.graphql_schema.read",
     "collector.graphql_query.execute",
     "crm.objects.contacts.write"

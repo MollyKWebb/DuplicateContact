@@ -4,7 +4,6 @@ import {
   Box,
   Text,
   Alert,
-  Flex,
   hubspot,
 } from '@hubspot/ui-extensions';
 
@@ -27,8 +26,8 @@ const Extension = ({ runServerless, context }) => {
 
     try {
       const response = await runServerless({
-        name: 'duplicateContact',
-        parameters: { contactId: context.contact.id },
+        name: 'duplicateDeal',
+        parameters: { dealId: context.deal.id },
       });
 
       if (response.status === 'SUCCESS') {
@@ -47,14 +46,14 @@ const Extension = ({ runServerless, context }) => {
     <Box>
       <Text>
         Click the button below to duplicate this deal, including some properties,
-        company associations, and deal associations.
+        company associations, and contact associations.
       </Text>
       <Box marginTop="md">
         <Button
           onClick={handleDuplicate}
           disabled={loading}
         >
-          {loading ? 'Duplicating...' : 'Duplicate Contact'}
+          {loading ? 'Duplicating...' : 'Duplicate Deal'}
         </Button>
       </Box>
       {error && (
@@ -63,7 +62,7 @@ const Extension = ({ runServerless, context }) => {
           variant="error"
           marginTop="md"
         >
-          <Text>{error}</Text>
+          {error}
         </Alert>
       )}
       {success && (
@@ -72,7 +71,7 @@ const Extension = ({ runServerless, context }) => {
           variant="success"
           marginTop="md"
         >
-          <Text>Deal duplicated successfully!</Text>
+          Deal duplicated successfully!
         </Alert>
       )}
     </Box>

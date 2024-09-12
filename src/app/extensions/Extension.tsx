@@ -1,15 +1,21 @@
-// src/app/extensions/Extension.tsx
 import React, { useState } from 'react';
 import {
   Button,
   Box,
   Text,
   Alert,
-  AlertTitle,
-  AlertDescription,
+  Flex,
+  hubspot,
 } from '@hubspot/ui-extensions';
 
-export const DuplicateDeal = ({ runServerless, context }) => {
+hubspot.extend(({ runServerlessFunction, context }) => (
+  <Extension
+    runServerless={runServerlessFunction}
+    context={context}
+  />
+));
+
+const Extension = ({ runServerless, context }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -21,14 +27,14 @@ export const DuplicateDeal = ({ runServerless, context }) => {
 
     try {
       const response = await runServerless({
-        name: 'duplicateDeal',
-        parameters: { dealId: context.deal.id },
+        name: 'duplicateContact',
+        parameters: { contactId: context.contact.id },
       });
 
       if (response.status === 'SUCCESS') {
         setSuccess(true);
       } else {
-        throw new Error(response.message || 'Failed to duplicate deal');
+        throw new Error(response.message || 'Failed to duplicate contact');
       }
     } catch (err) {
       setError(err.message);
@@ -40,29 +46,37 @@ export const DuplicateDeal = ({ runServerless, context }) => {
   return (
     <Box>
       <Text>
-        Click the button below to duplicate this deal, including all properties,
-        company associations, contact associations, and line items.
+        Click the button below to duplicate this contact, including some properties,
+        company associations, and deal associations.
       </Text>
-      <Box mt={2}>
+      <Box marginTop="md">
         <Button
           onClick={handleDuplicate}
           disabled={loading}
         >
-          {loading ? 'Duplicating...' : 'Duplicate Deal'}
+          {loading ? 'Duplicating...' : 'Duplicate Contact'}
         </Button>
       </Box>
       {error && (
-        <Alert title="Error" variant="error">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+        <Alert
+          title="Error"
+          variant="error"
+          marginTop="md"
+        >
+          <Text>{error}</Text>
         </Alert>
       )}
       {success && (
-        <Alert title="Success" variant="success">
-          <AlertTitle>Success</AlertTitle>
-          <AlertDescription>Deal duplicated successfully!</AlertDescription>
+        <Alert
+          title="Success"
+          variant="success"
+          marginTop="md"
+        >
+          <Text>Contact duplicated successfully!</Text>
         </Alert>
       )}
     </Box>
   );
 };
+
+export default Extension;

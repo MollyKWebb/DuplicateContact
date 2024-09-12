@@ -1,46 +1,90 @@
-// src/app/app.functions/duplicateDeal.js
 const hubspot = require('@hubspot/api-client');
 
 exports.main = async (context = {}, sendResponse) => {
   const { dealId } = context.parameters;
-  const hubspotClient = new hubspot.Client({ accessToken: context.secrets.privateappkey });
+  const hubspotClient = new hubspot.Client({ accessToken: context.secrets.PRIVATE_APP_ACCESS_TOKEN });
 
   try {
-    // Fetch the original deal
-    const originalDeal = await hubspotClient.crm.deals.basicApi.getById(dealId, ['properties', 'associations']);
+    // Fetch deal data using GraphQL
+    const dealData = await fetchDealData(hubspotClient, dealId);
+    
+    // Create a new deal with the fetched data
+    const newDeal = await createDuplicateDeal(hubspotClient, dealData);
+    
+    // Associate the new deal with companies and contacts
+    await associateDeal(hubspotClient, newDeal.id, dealData);
 
-    // Create a new deal with the same properties
-    const newDealProperties = { ...originalDeal.properties };
-    delete newDealProperties.hs_object_id;
-    delete newDealProperties.createdate;
-    delete newDealProperties.hs_lastmodifieddate;
-
-    const newDeal = await hubspotClient.crm.deals.basicApi.create({ properties: newDealProperties });
-
-    // Copy associations
-    const associationTypes = ['company', 'contact'];
-    for (const type of associationTypes) {
-      const associations = await hubspotClient.crm.deals.associationsApi.getAll(dealId, type);
-      for (const association of associations.results) {
-        await hubspotClient.crm.deals.associationsApi.create(newDeal.id, type, association.id);
-      }
-    }
-
-    // Copy line items
-    const lineItems = await hubspotClient.crm.deals.associationsApi.getAll(dealId, 'line_item');
-    for (const lineItem of lineItems.results) {
-      const originalLineItem = await hubspotClient.crm.lineItems.basicApi.getById(lineItem.id);
-      const newLineItemProperties = { ...originalLineItem.properties };
-      delete newLineItemProperties.hs_object_id;
-      delete newLineItemProperties.createdate;
-      delete newLineItemProperties.hs_lastmodifieddate;
-
-      const newLineItem = await hubspotClient.crm.lineItems.basicApi.create({ properties: newLineItemProperties });
-      await hubspotClient.crm.deals.associationsApi.create(newDeal.id, 'line_item', newLineItem.id);
-    }
-
-    sendResponse({ status: 'SUCCESS', data: newDeal });
+    sendResponse({
+      status: 'SUCCESS',
+      body: { id: newDeal.id },
+    });
   } catch (error) {
-    sendResponse({ status: 'ERROR', message: error.message });
+    sendResponse({
+      status: 'ERROR',
+      body: { message: error.message },
+    });
   }
 };
+
+async function fetchDealData(hubspotClient, dealId) {
+  const query = `
+    query DealQuery($dealId: String!) {
+      deal(id: $dealId) {
+        amount
+        closedate
+        dealname
+        dealstage
+        pipeline
+        hubspot_owner_id
+        associations {
+          companies {
+            items {
+              id
+            }
+          }
+          contacts {
+            items {
+              id
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const variables = { dealId };
+  const result = await hubspotClient.apiRequest({
+    method: 'POST',
+    path: '/graphql',
+    body: { query, variables },
+  });
+
+  return result.data.data.deal;
+}
+
+async function createDuplicateDeal(hubspotClient, dealData) {
+  const properties = {
+    amount: dealData.amount,
+    closedate: dealData.closedate,
+    dealname: `${dealData.dealname} (Copy)`,
+    dealstage: dealData.dealstage,
+    pipeline: dealData.pipeline,
+    hubspot_owner_id: dealData.hubspot_owner_id,
+  };
+
+  const apiResponse = await hubspotClient.crm.deals.basicApi.create({ properties });
+  return apiResponse;
+}
+
+async function associateDeal(hubspotClient, newDealId, dealData) {
+  const companyIds = dealData.associations.companies.items.map(item => item.id);
+  const contactIds = dealData.associations.contacts.items.map(item => item.id);
+
+  if (companyIds.length > 0) {
+    await hubspotClient.crm.deals.associationsApi.createBatch(newDealId, 'company', companyIds);
+  }
+
+  if (contactIds.length > 0) {
+    await hubspotClient.crm.deals.associationsApi.createBatch(newDealId, 'contact', contactIds);
+  }
+}

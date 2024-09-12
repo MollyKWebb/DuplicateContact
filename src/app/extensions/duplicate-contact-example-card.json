@@ -7,6 +7,6 @@
     "module": {
       "file": "Extension.tsx"
     },
-    "objectTypes": [{ "name": "contacts" }]
+    "objectTypes": [{ "name": "deals" }]
   }
 }
